@@ -14,6 +14,12 @@ int freqVal = 0;
 
 
 void setup() {
+
+  Serial1.begin(9600);
+  setBrightness(255);
+
+
+
   /**
      FM transmitter setup
   */
@@ -72,6 +78,22 @@ void setup() {
 
 void loop() {
   /**
+     7 Seg
+  */
+
+  displayNumber(freqVal / 10);
+  Serial1.write(0x77);
+  Serial1.write(0b0000100); //3rd position decimal
+
+  //  else if (freqVal > 9990) {
+  //    displayNumber(freqVal / 10);
+  //    Serial1.write(0x76);  // Clear display command
+  //    Serial1.write(0x77);
+  //    Serial1.write(0b0000010); //2nd position decimal
+  //  }
+
+  delay(500);
+  /**
      FM loop
 
   */
@@ -106,23 +128,27 @@ void encoderFunc() {
     setFMmodule();
   } else if (newPosition <= oldPosition - 4) {
     oldPosition = newPosition;
-    freqVal = oldPosition / 4 * (1000);
+    freqVal = oldPosition / 4 * (10);
     Serial.println("backwards");
     Serial.println(freqVal);
     setFMmodule();
 
   }
-  if (freqVal > 10800) {
-    freqVal = 8750;
-    setFMmodule();
-  } else if (freqVal > 8750) {
-    freqVal = 10800;
-    setFMmodule();
-  } else if (freqVal == 0) {
-    freqVal = 8750;
-    setFMmodule();
-  }
 }
+//  if (freqVal > 10800) {
+//    freqVal = 8750;
+//    setFMmodule();
+//  } else if (freqVal < 8750) {
+//    freqVal = 10800;
+//    setFMmodule();
+//  }
+//  } else if (freqVal == 0) {
+//    freqVal = 8750;
+//    setFMmodule();
+//  }
+
+
+
 
 void setFMmodule () {
   Serial.print("\nSet TX power");
@@ -133,4 +159,20 @@ void setFMmodule () {
   Serial.print('.');
   Serial.println(FMSTATION % 100);
   radio.tuneFM(FMSTATION); // 102.3 mhz
+}
+
+void displayNumber(int number) {
+  char displayFormattedNumber[4];
+  sprintf(displayFormattedNumber, "%4d", number);
+  clearDisplay();
+  Serial1.print(displayFormattedNumber);
+}
+
+void clearDisplay()
+{
+  Serial1.write(0x76);  // Clear display command
+}
+void setBrightness(int number) {
+  Serial1.write(0x7A);
+  Serial1.write(number);
 }
